@@ -14,14 +14,14 @@
 #include <stdint.h>
 
 /**
- * NoOsÈÎÎñ½á¹¹Ìå
+ * NoOs task struct
  */
 typedef struct NoOsTaskDef
 {
-	void (*Callback)(void);  //ÈÎÎñ»Øµ÷º¯Êı
-	struct NoOsTaskDef* Next;//Ö¸ÏòÏÂÒ»¸öÈÎÎñ
-	uint32_t RemainingTick;  //Ê£ÓàÊ±¼äÆ¬
-	uint32_t InitTick;       //Ê±¼äÆ¬ÖØÔØÖµ
+	void (*Callback)(void);  //ä»»åŠ¡å›è°ƒå‡½æ•°
+	struct NoOsTaskDef* Next;//æŒ‡å‘ä¸‹ä¸€ä¸ªä»»åŠ¡
+	uint32_t RemainingTick;  //å‰©ä½™æ—¶é—´ç‰‡
+	uint32_t InitTick;       //æ—¶é—´ç‰‡é‡è½½å€¼
 }NoOsTaskDef;
 
 extern volatile uint8_t  OneNoOsTickFlag;
