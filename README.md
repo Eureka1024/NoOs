@@ -184,7 +184,7 @@ int main(void)
 
 实现效果如下所示：
 
-![led2](https://gitee.com/Eureka1024/my-image-hosting-service/raw/master/img/20210807103518.gif)
+![led2](https://github.com/Eureka1024/NoOs/blob/main/documentation/figures/led_flash.gif)
 
 
 
