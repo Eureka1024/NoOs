@@ -10,7 +10,6 @@
  
 #include "NoOs.h"
 
-volatile uint8_t  OneNoOsTickFlag;//标记一个系统滴答的到来
 volatile uint32_t NoOsTick;       //记录滴答时钟数
 
 NoOsTaskDef  IdleTask;    //空闲任务
@@ -33,12 +32,13 @@ void IdleTaskCallback(void)
  */
 void InitNoOs(void)
 {
-    IdleTask.Next = &IdleTask;  //构成单循环链表
-    IdleTask.RemainingTick = 1; //不可更改
-    IdleTask.InitTick = 1;      //不可更改
-    IdleTask.Callback = IdleTaskCallback;
-    CurrentTask = &IdleTask;   
-    NoOsTick = 0;
+    IdleTask.Callback = IdleTaskCallback; //Callback function for idle tasks
+    IdleTask.Priority = 3;     //The default priority of idle tasks is 3
+    IdleTask.WaitTimes = IdleTask.Priority; //Wait times
+    IdleTask.Next = &IdleTask;  //One way circular linked list
+    
+    CurrentTask = &IdleTask; //Init CurrentTask
+    NoOsTick = 0;   //Init NoOsTick
 }
 
 /**
@@ -57,18 +57,22 @@ static void ListInsertAfter(NoOsTaskDef* Target, NoOsTaskDef* New)
  * @brief  Initialize a new NoOs's task.
  * @param  NewTask: the new task.
  * @param  Callback: the callback function of of new task.
- * @param  InitTick: task's initialized tick.
+ * @param  Priority: task's priority.
  * @retval None.
  */
-void InitNoOsTask(NoOsTaskDef* NewTask, void(*Callback)(void), uint32_t InitTick)
+int InitNoOsTask(NoOsTaskDef* NewTask, void(*Callback)(void), uint32_t Priority)
 {
-    if ((NewTask->InitTick == 0) && (InitTick != 0)) //避免重复初始化任务&&传入参数不合理
-    {
-        NewTask->Callback = Callback;
-        NewTask->RemainingTick = InitTick;
-        NewTask->InitTick = InitTick;
-        ListInsertAfter(&IdleTask,NewTask);
-    }
+    //Avoid repeating initialization tasks
+    if (NewTask->Priority != 0) return FALSE;
+    //The input parameter is unreasonable
+    if (Priority == 0) return FALSE;
+    
+    NewTask->Callback = Callback;
+    NewTask->Priority = Priority;
+    NewTask->WaitTimes = NewTask->Priority;
+    ListInsertAfter(&IdleTask,NewTask);
+    
+    return TRUE;
 }
 
 /**
@@ -76,26 +80,16 @@ void InitNoOsTask(NoOsTaskDef* NewTask, void(*Callback)(void), uint32_t InitTick
  * @param  None.
  * @retval None.
  */
-void SchedulingTask(void)
+void StartNoOsScheduler(void)
 {
-    if(OneNoOsTickFlag)
+    while(1)
     {
-        OneNoOsTickFlag = 0;
+        CurrentTask = CurrentTask->Next;
         
-        while(1)
+        if ((CurrentTask->WaitTimes --) == 0)
         {
-            CurrentTask = CurrentTask->Next;
-            
-            if ((-- CurrentTask->RemainingTick) == 0)
-            {
-                CurrentTask->RemainingTick = CurrentTask->InitTick;
-                CurrentTask->Callback();
-                
-                if (CurrentTask == &IdleTask)
-                {
-                    break;
-                }
-            }
+            CurrentTask->WaitTimes = CurrentTask->Priority;
+            CurrentTask->Callback();
         }
     }
 }
@@ -103,7 +97,7 @@ void SchedulingTask(void)
 /**
  * @brief  Get system clock tick.
  * @param  None.
- * @retval Clock tick.
+ * @retval NoOs's clock tick.
  */
 uint32_t GetNoOsTick(void)
 {

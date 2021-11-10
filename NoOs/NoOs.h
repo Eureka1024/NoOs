@@ -11,25 +11,26 @@
 #ifndef _NO_OS_H
 #define _NO_OS_H
 
-#include <stdint.h>
+#include "tb_interface.h"
+#define TRUE  1
+#define FALSE 0
 
 /**
  * NoOs task struct
  */
 typedef struct NoOsTaskDef
 {
-	void (*Callback)(void);  //任务回调函数
-	struct NoOsTaskDef* Next;//指向下一个任务
-	uint32_t RemainingTick;  //剩余时间片
-	uint32_t InitTick;       //时间片重载值
+	void (*Callback)(void);   //callback function of task 
+    uint32_t Priority;        //priority of task
+	uint32_t WaitTimes;       //wait times
+    struct NoOsTaskDef* Next; //point to next task
 }NoOsTaskDef;
 
-extern volatile uint8_t  OneNoOsTickFlag;
-extern volatile uint32_t NoOsTick;
+extern volatile uint32_t NoOsTick; //NoOs's clock tick
 
 void InitNoOs(void);
-void SchedulingTask(void);
-void InitNoOsTask(NoOsTaskDef* NewTask, void(*Callback)(void), uint32_t InitTick);
+void StartNoOsScheduler(void);
+int InitNoOsTask(NoOsTaskDef* NewTask, void(*Callback)(void), uint32_t Priority);
 uint32_t GetNoOsTick(void);
 
 #endif
