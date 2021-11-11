@@ -33,11 +33,11 @@ NoOs 源代码的结构如下所示:
 
   描述：初始化 NoOs 系统。
 
-- **void SchedulingTask(void);**
+- **void StartNoOsScheduler(void);**
 
   描述：用于调度加入调度器的任务。
 
-- **void InitNoOsTask(NoOsTaskDef* NewTask, void(*Callback)(void), uint32_t InitTick);**
+- **InitNoOsTask(NoOsTaskDef* NewTask, void(*Callback)(void), uint32_t Priority);**
 
   描述：用于初始化新的任务并将其加入调度器。
 
@@ -45,7 +45,7 @@ NoOs 源代码的结构如下所示:
 
   - NewTask：新任务
   - Callback：新任务的回调函数
-  - InitTick：每运行一次任务需要等待的系统时钟心跳的次数
+  - Priority：任务的优先级(数字越低，优先级越高)
 
 - **uint32_t GetNoOsTick(void);**
 
@@ -55,25 +55,27 @@ NoOs 源代码的结构如下所示:
 
 ## 移植
 
-因为 NoOs 是纯 C 语言实现的，所以在不同的硬件设备间移植起来很简单。
+因为 `NoOs` 是纯 C 语言实现的，所以在不同的硬件设备间移植起来很简单。
 
 详细移植过程如下所示：
 
-- 将源代码目录中的 NoOs.c 加入项目工程目录。
+- 将源代码目录中的 `NoOs.c` 加入项目工程目录。
 
-  以 STM32 在 Keil MDK5 开发为例：
+  以 `STM32` 在 `Keil MDK5` 开发为例：
 
   ![image-20210807092758057](https://gitee.com/Eureka1024/my-image-hosting-service/raw/master/img/20210807092758.png)
 
 
 
-- 将源代码目录中的 NoOs.h 加入项目工程头文件包含路径。
+- 将源代码目录中的 `NoOs.h` 加入项目工程头文件包含路径。
 
-  以 STM32 在 Keil MDK5 开发为例：
+  以 `STM32` 在 `Keil MDK5` 开发为例：
 
   ![image-20210807093328520](https://gitee.com/Eureka1024/my-image-hosting-service/raw/master/img/20210807093328.png)
 
-- 在 main.c 函数中加入 InitNoOs() 函数，用于初始化 NoOs 系统，在无限循环 While(1) 中调用 SchedulingTask() 函数，用于调度任务。
+- 在 `1ms` 硬件中断中函数中，加入 `NoOsTick++;`。
+
+- 在 `main.c` 函数中加入 `InitNoOs()` 函数，用于初始化 `NoOs` 系统，`main`函数的最后调用 `StartNoOsScheduler()` 函数，用于调度任务。
 
   以 STM32 在 Keil MDK5 开发为例：
 
@@ -92,28 +94,25 @@ NoOs 源代码的结构如下所示:
   
     /* Init NoOs */
     InitNoOs();
-  
-    while (1)
-    {
-      SchedulingTask();
-    }
+      
+    StartNoOsScheduler();
   }
   ```
-
+  
   
 
 ## 快速上手
 
-以建立一个 LED 闪烁显示的任务为例，使用的硬件依然是 STM32。
+以建立一个 `LED` 闪烁显示的任务为例，使用的硬件依然是 `STM32`。
 
 首先完成任务运行基础：
 
-- 使用 STM32CubeMx 建立 STM32 工程，完成基本设置，配置好 LED 控制引脚 对应的 GPIO 引脚，设置 SysTick 时钟，默认是 1ms 中断一次。
+- 使用 `STM32CubeMx` 建立 `STM32` 工程，完成基本设置，配置好 `LED` 控制引脚 对应的 `GPIO` 引脚，设置 `SysTick` 时钟，默认是 `1ms` 中断一次。
 - 按上节移植过程配置好 NoOs 运行的基本条件。
 
-建立 LED 显示任务：
+建立 `LED` 显示任务：
 
-- 定义 LED 任务的结构体
+- 定义 `LED` 任务的结构体
 
   ```c
   NoOsTaskDef LedDisplayTask;
@@ -135,7 +134,7 @@ NoOs 源代码的结构如下所示:
   
   ```
 
-- 在 main() 中的 InitNoOs() 后调用任务初始化函数，成功将其加入任务调度中。
+- 在 `main()` 中的 `InitNoOs()` 后调用任务初始化函数，成功将其加入任务调度中，将上面的回调函数加入初始化参数列表，且优先级设置为 1。
 
   ```c
   InitNoOsTask(&LedDisplayTask, LedDisplayCallback, 1); 
@@ -152,7 +151,7 @@ void LedDisplayCallback(void)
 {
     static uint32_t LedDelayTick;
     
-    if((GetNoOsTick() - LedDelayTick) > 500)
+    if((GetNoOsTick() - LedDelayTick) > 500) //500ms
     {
         LedDelayTick = GetNoOsTick();
         HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8);
@@ -175,10 +174,7 @@ int main(void)
   /* Init LedDisplay task */
   InitNoOsTask(&LedDisplayTask, LedDisplayCallback, 1); 
     
-  while (1)
-  {
-    SchedulingTask();
-  }
+  StartNoOsScheduler();
 }
 ```
 
