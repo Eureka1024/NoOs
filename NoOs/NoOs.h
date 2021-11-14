@@ -12,6 +12,7 @@
 #define _NO_OS_H
 
 #include "tb_interface.h"
+
 #define TRUE  1
 #define FALSE 0
 
@@ -24,6 +25,7 @@ typedef struct NoOsTaskDef
     uint32_t Priority;        //priority of task
 	uint32_t WaitTimes;       //wait times
     struct NoOsTaskDef* Next; //point to next task
+    uint32_t TaskTick;        //task tick
 }NoOsTaskDef;
 
 extern volatile uint32_t NoOsTick; //NoOs's clock tick

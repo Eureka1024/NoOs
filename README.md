@@ -21,7 +21,7 @@ NoOs 源代码的结构如下所示:
 
 | Name | Description           |
 | ---- | --------------------- |
-| NoOs | NoOs 的源代码和头文件 |
+| NoOs | NoOs 的源代码和头文件  |
 
 
 
