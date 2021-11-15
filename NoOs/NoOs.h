@@ -17,6 +17,8 @@
 #define TRUE  1
 #define FALSE 0
 
+#define NOOS_EVENT_FLAG_AND 0x01
+#define NOOS_EVENT_FLAG_OR  0x02
 /**
  * NoOs task struct
  */
